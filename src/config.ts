@@ -23,6 +23,11 @@ const schema = z.object({
   LOG_LEVEL: z
     .enum(["debug", "info", "warn", "error"])
     .default("info"),
+
+  ATTACHMENT_WORKSPACE: z
+    .string()
+    .default("./downloads")
+    .describe("Directory where downloaded attachments are saved (created if missing)"),
 });
 
 export type Config = z.infer<typeof schema>;

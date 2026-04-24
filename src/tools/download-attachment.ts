@@ -25,14 +25,6 @@ export const downloadAttachmentSchema = z.object({
     .describe(
       "Numeric attachment ID from backlog_get_attachments. Example: 42"
     ),
-  outputDir: z
-    .string()
-    .optional()
-    .describe(
-      "Directory to save the downloaded file. " +
-      "Created automatically if it does not exist. " +
-      "Default: \"./downloads\". Example: \"/tmp/backlog-files\""
-    ),
 });
 
 export type DownloadAttachmentInput = z.infer<typeof downloadAttachmentSchema>;
@@ -51,7 +43,8 @@ export async function handleDownloadAttachment(
     return errorContent(`Invalid input: ${msg}`);
   }
 
-  const { issueIdOrKey, attachmentId, outputDir = "./downloads" } = parsed.data;
+  const { issueIdOrKey, attachmentId } = parsed.data;
+  const outputDir = cfg.ATTACHMENT_WORKSPACE;
   const client = new BacklogHttpClient(cfg.BACKLOG_BASE_URL, cfg.BACKLOG_API_KEY);
 
   try {

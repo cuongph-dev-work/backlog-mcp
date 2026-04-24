@@ -16,7 +16,9 @@ Use this tool when you need to:
 |-----------|------|----------|-------------|
 | `issueIdOrKey` | `string` | **Required** | Issue key (e.g. `"BLG-123"`) or numeric issue ID |
 | `attachmentId` | `number` | **Required** | Numeric attachment ID from `backlog_get_attachments`. Must be a positive integer. |
-| `outputDir` | `string` | Optional | Directory to save the file. Created automatically if it doesn't exist. **Default:** `"./downloads"` |
+
+> **Output directory** is configured server-side via `ATTACHMENT_WORKSPACE` in `.env` (default: `./downloads`).
+> The directory is created automatically if it doesn't exist.
 
 ---
 

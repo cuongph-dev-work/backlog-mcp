@@ -26,6 +26,7 @@ const MOCK_CFG: Config = {
   BACKLOG_API_KEY: "test-key",
   MCP_PORT: 3100,
   LOG_LEVEL: "info",
+  ATTACHMENT_WORKSPACE: "/tmp/test-downloads",
 };
 
 const MOCK_BUFFER = Buffer.from("fake file content");
@@ -60,20 +61,17 @@ describe("handleDownloadAttachment", () => {
 
     await handleDownloadAttachment({ issueIdOrKey: "BLG-1", attachmentId: 5 }, MOCK_CFG);
 
-    expect(fsMock.mkdir).toHaveBeenCalledWith("./downloads", { recursive: true });
+    expect(fsMock.mkdir).toHaveBeenCalledWith("/tmp/test-downloads", { recursive: true });
   });
 
-  it("uses custom outputDir when specified", async () => {
+  it("uses BACKLOG_DOWNLOAD_DIR from config", async () => {
     (BacklogHttpClient.prototype.downloadAttachment as ReturnType<typeof vi.fn>).mockImplementation(
       async () => ({ data: MOCK_BUFFER, filename: "doc.pdf" })
     );
 
-    await handleDownloadAttachment(
-      { issueIdOrKey: "BLG-1", attachmentId: 5, outputDir: "/custom/path" },
-      MOCK_CFG
-    );
+    await handleDownloadAttachment({ issueIdOrKey: "BLG-1", attachmentId: 5 }, MOCK_CFG);
 
-    expect(fsMock.mkdir).toHaveBeenCalledWith("/custom/path", { recursive: true });
+    expect(fsMock.mkdir).toHaveBeenCalledWith("/tmp/test-downloads", { recursive: true });
   });
 
   it("returns isError=true on HTTP error", async () => {

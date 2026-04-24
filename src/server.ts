@@ -364,13 +364,13 @@ EXAMPLE: { issueIdOrKey: "BLG-123" }`,
 
 Returns the absolute path where the file was saved, the filename, and the file size.
 Get the attachmentId from backlog_get_attachments first.
+The output directory is configured via BACKLOG_DOWNLOAD_DIR in the server's .env file.
 
 INPUT:
 - issueIdOrKey (required): issue key e.g. "BLG-123" or numeric ID
 - attachmentId (required): numeric ID from backlog_get_attachments
-- outputDir (optional): directory to save file (created if missing, default: "./downloads")
 
-EXAMPLE: { issueIdOrKey: "BLG-123", attachmentId: 42, outputDir: "./downloads" }`,
+EXAMPLE: { issueIdOrKey: "BLG-123", attachmentId: 42 }`,
     {
       issueIdOrKey: z
         .string()
@@ -381,13 +381,6 @@ EXAMPLE: { issueIdOrKey: "BLG-123", attachmentId: 42, outputDir: "./downloads" }
         .int()
         .positive()
         .describe("Numeric attachment ID from backlog_get_attachments. Example: 42"),
-      outputDir: z
-        .string()
-        .optional()
-        .describe(
-          "Directory to save the file. Created automatically if missing. " +
-          "Default: \"./downloads\". Example: \"/tmp/backlog-files\""
-        ),
     },
     async (input) => {
       return handleDownloadAttachment(input, config);

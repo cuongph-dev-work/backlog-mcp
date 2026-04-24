@@ -15,6 +15,7 @@ const MOCK_CFG: Config = {
   BACKLOG_API_KEY: "test-key",
   MCP_PORT: 3100,
   LOG_LEVEL: "info",
+  ATTACHMENT_WORKSPACE: "./downloads",
 };
 
 const MOCK_ATTACHMENTS = [
