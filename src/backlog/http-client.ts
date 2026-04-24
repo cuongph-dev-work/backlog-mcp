@@ -7,6 +7,9 @@ import {
   prioritiesUrl,
   projectCategoriesUrl,
   projectVersionsUrl,
+  projectsUrl,
+  singleProjectUrl,
+  projectUsersUrl,
 } from "./endpoints.js";
 import {
   mapIssue,
@@ -16,6 +19,8 @@ import {
   mapPriority,
   mapCategory,
   mapMilestone,
+  mapProject,
+  mapUser,
 } from "./mappers.js";
 import { backlogHttpError, backlogResponseError } from "../errors.js";
 import type {
@@ -25,6 +30,8 @@ import type {
   BacklogRawPriority,
   BacklogRawCategory,
   BacklogRawMilestone,
+  BacklogRawProject,
+  BacklogRawUser,
 } from "../types/backlog-api.js";
 import type {
   BacklogIssue,
@@ -34,6 +41,8 @@ import type {
   BacklogPriority,
   BacklogCategory,
   BacklogMilestone,
+  BacklogProject,
+  BacklogUser,
 } from "../types.js";
 
 // ---------------------------------------------------------------------------
@@ -230,10 +239,51 @@ export class BacklogHttpClient {
   }
 
   // ---------------------------------------------------------------------------
+  // backlog_get_projects
+  // ---------------------------------------------------------------------------
+
+  async getProjects(archived?: boolean): Promise<BacklogProject[]> {
+    const url = projectsUrl(this.baseUrl);
+    const queryParams: Record<string, unknown> = {};
+    if (archived != null) queryParams["archived"] = archived;
+    const res = await this.http.get(url, { params: queryParams });
+    this.assertOk(res.status, url, res.data);
+    if (!Array.isArray(res.data)) {
+      throw backlogResponseError("Expected array response from GET /projects", res.data);
+    }
+    return (res.data as BacklogRawProject[]).map(mapProject);
+  }
+
+  /** Fetch a single project by key or numeric ID (used to resolve keys → IDs). */
+  async getProject(projectIdOrKey: string): Promise<BacklogProject> {
+    const url = singleProjectUrl(this.baseUrl, projectIdOrKey);
+    const res = await this.http.get(url);
+    this.assertOk(res.status, url, res.data);
+    return mapProject(res.data as BacklogRawProject);
+  }
+
+  // ---------------------------------------------------------------------------
+  // backlog_get_users
+  // ---------------------------------------------------------------------------
+
+  /** Fetch all members of a project. */
+  async getProjectUsers(projectIdOrKey: string): Promise<BacklogUser[]> {
+    const url = projectUsersUrl(this.baseUrl, projectIdOrKey);
+    const res = await this.http.get(url);
+    this.assertOk(res.status, url, res.data);
+    if (!Array.isArray(res.data)) {
+      throw backlogResponseError("Expected array response from GET /projects/:key/users", res.data);
+    }
+    return (res.data as BacklogRawUser[]).map(mapUser);
+  }
+
+  // ---------------------------------------------------------------------------
   // Internal helpers
   // ---------------------------------------------------------------------------
 
+
   private assertOk(status: number, url: string, body: unknown): void {
+
     if (status < 200 || status >= 300) {
       // Extract Backlog error message if available
       let detail: string | undefined;

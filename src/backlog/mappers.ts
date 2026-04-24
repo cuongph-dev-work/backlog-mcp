@@ -5,6 +5,8 @@ import type {
   BacklogRawPriority,
   BacklogRawCategory,
   BacklogRawMilestone,
+  BacklogRawProject,
+  BacklogRawUser,
 } from "../types/backlog-api.js";
 import type {
   BacklogIssue,
@@ -15,6 +17,8 @@ import type {
   BacklogPriority,
   BacklogCategory,
   BacklogMilestone,
+  BacklogProject,
+  BacklogUser,
 } from "../types.js";
 import { issueViewUrl } from "./endpoints.js";
 
@@ -129,5 +133,47 @@ export function mapMilestone(raw: BacklogRawMilestone): BacklogMilestone {
     releaseDueDate: raw.releaseDueDate ?? null,
     archived: raw.archived,
     displayOrder: raw.displayOrder,
+  };
+}
+
+/** Maps a raw Backlog project to the BacklogProject domain type. */
+export function mapProject(raw: BacklogRawProject): BacklogProject {
+  return {
+    id: raw.id,
+    projectKey: raw.projectKey,
+    name: raw.name,
+    archived: raw.archived,
+    chartEnabled: raw.chartEnabled,
+    subtaskingEnabled: raw.subtaskingEnabled,
+    useWiki: raw.useWiki,
+    useFileSharing: raw.useFileSharing,
+    useGit: raw.useGit,
+    textFormattingRule: raw.textFormattingRule,
+  };
+}
+
+/** Maps roleType integer to a human-readable label. */
+function roleTypeName(roleType: number): string {
+  switch (roleType) {
+    case 1: return "Administrator";
+    case 2: return "Normal User";
+    case 3: return "Reporter";
+    case 4: return "Viewer";
+    case 5: return "Guest Reporter";
+    case 6: return "Guest Viewer";
+    default: return `Role(${roleType})`;
+  }
+}
+
+/** Maps a raw Backlog user payload to the BacklogUser domain type. */
+export function mapUser(raw: BacklogRawUser): BacklogUser {
+  return {
+    id: raw.id,
+    userId: raw.userId,
+    name: raw.name,
+    roleType: raw.roleType,
+    roleName: roleTypeName(raw.roleType),
+    mailAddress: raw.mailAddress ?? null,
+    lastLoginTime: raw.lastLoginTime ?? null,
   };
 }

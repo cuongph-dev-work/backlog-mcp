@@ -60,49 +60,6 @@
 - Doc must include: **When to Use**, **Input** (table), **Output** (described), **Error Cases** (table), **Examples** (at least 1 request + expected output).
 - Keep the doc in sync with the tool's Zod schema — any param added/removed must be reflected in the doc.
 
-## Available MCP Tools
-
-### `backlog_get_issue_list`
-- **Purpose:** Fetch a list of Backlog issues with optional filters.
-- **Key inputs:** `projectId[]`, `statusId[]`, `priorityId[]`, `assigneeId[]`, `keyword`, `count`, `offset`, `sort`, `order`
-- **Output:** Markdown table + detailed summaries per issue.
-- **Docs:** `docs/tools/backlog_get_issue_list.md`
-
-### `backlog_get_issue`
-- **Purpose:** Fetch full details for one issue by key or numeric ID.
-- **Input:** `{ issueIdOrKey: string }` — e.g. `BLG-123` or `12345`.
-- **Output:** Markdown with summary, description, status, priority, type, assignee, reporter, dates, hours, URL.
-- **Docs:** `docs/tools/backlog_get_issue.md`
-
-### `backlog_get_comments`
-- **Purpose:** Fetch comments for an issue, including changelog (field change history).
-- **Input:** `{ issueIdOrKey: string, count?, order?, minId?, maxId? }`
-- **Output:** Markdown list of comments with author, date, text, and field changes.
-- **Docs:** `docs/tools/backlog_get_comments.md`
-
-### `backlog_get_statuses`
-- **Purpose:** Fetch all statuses defined for a project. Use IDs to filter `backlog_get_issue_list`.
-- **Input:** `{ projectIdOrKey: string }`
-- **Output:** Markdown table with ID, name, color per status.
-- **Docs:** `docs/tools/backlog_get_statuses.md`
-
-### `backlog_get_priorities`
-- **Purpose:** Fetch global issue priorities (space-wide, not project-specific). Use IDs to filter `backlog_get_issue_list`.
-- **Input:** _(none)_
-- **Output:** Markdown table with ID and name per priority.
-- **Docs:** `docs/tools/backlog_get_priorities.md`
-
-### `backlog_get_categories`
-- **Purpose:** Fetch all categories defined for a project. Use IDs to filter `backlog_get_issue_list`.
-- **Input:** `{ projectIdOrKey: string }`
-- **Output:** Markdown table with ID and name per category.
-- **Docs:** `docs/tools/backlog_get_categories.md`
-
-### `backlog_get_milestones`
-- **Purpose:** Fetch milestones (versions) for a project. Use IDs to filter `backlog_get_issue_list`.
-- **Input:** `{ projectIdOrKey: string, archived?: boolean }` — `archived` defaults to `false` (active only).
-- **Output:** Markdown table with ID, name, start date, due date, archived flag.
-- **Docs:** `docs/tools/backlog_get_milestones.md`
 
 ## Adding a New Tool
 
@@ -114,6 +71,14 @@
 6. Add tests in `src/tests/<name>.test.ts`.
 7. Update `README.md` with the new tool.
 8. Verify: `npx tsc --noEmit && npx vitest run`.
+9. **Run the quality checklist** at `docs/tools-quality-checklist.md` and confirm the tool passes all mandatory checks:
+   - **Input Schema:** Zod schema present, required/optional fields correct, `.describe()` on every field.
+   - **Output Design:** Structured Markdown, `isError: true` on errors, no raw HTML/blobs.
+   - **Tool Description:** Registered description explains _when to use_, inputs, and outputs clearly.
+   - **Security:** No credentials in input/output, auth handled server-side via `config`.
+   - **Error Handling:** All error paths return `{ isError: true }` with `McpError` (never plain `Error`).
+   - **LLM Compatibility:** Field names are semantic, enums/options are documented inline in `.describe()`.
+
 
 ## Common Pitfalls
 

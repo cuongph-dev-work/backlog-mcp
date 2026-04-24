@@ -11,6 +11,8 @@ import { handleGetStatuses } from "./tools/get-statuses.js";
 import { handleGetPriorities } from "./tools/get-priorities.js";
 import { handleGetCategories } from "./tools/get-categories.js";
 import { handleGetMilestones } from "./tools/get-milestones.js";
+import { handleGetProjects } from "./tools/get-projects.js";
+import { handleGetUsers } from "./tools/get-users.js";
 
 // ---------------------------------------------------------------------------
 // MCP server factory
@@ -31,39 +33,58 @@ function createMcpServer(): McpServer {
 Returns a compact table + detailed summaries for each issue.
 
 FILTERS:
-- projectId: required to scope results to a specific project
+- projectIdOrKey: project key (e.g. "MYPROJ") or numeric ID — auto-resolved. Highly recommended.
 - statusId: 1=Open, 2=InProgress, 3=Resolved, 4=Closed
 - priorityId: 2=High, 3=Normal, 4=Low
 - assigneeId: filter by specific user ID(s)
 - keyword: full-text search in summary and description
 - parentChild: 0=all, 1=child only, 2=parent only, 3=no parent, 4=no child
 
+Array fields accept CSV string ("1,2") or JSON array ([1,2]).
 PAGINATION: Use offset + count to paginate. Max 100 per request.`,
     {
-      projectId: z
-        .array(z.number().int().positive())
+      projectIdOrKey: z
+        .string()
         .optional()
-        .describe("Filter by project ID(s). Highly recommended."),
+        .describe(
+          "Filter by project key(s) or numeric ID(s). Comma-separated. " +
+          "Examples: \"MYPROJ\", \"12345\", \"MYPROJ,OTHER\". Auto-resolved to numeric IDs. Highly recommended."
+        ),
       statusId: z
-        .array(z.number().int().min(1).max(4))
+        .preprocess(
+          (v) => typeof v === "string" ? v.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0) : v,
+          z.array(z.number().int().min(1).max(4))
+        )
         .optional()
-        .describe("Filter by status: 1=Open, 2=InProgress, 3=Resolved, 4=Closed"),
+        .describe("Filter by status: 1=Open, 2=InProgress, 3=Resolved, 4=Closed. Accept [1,2] or \"1,2\""),
       priorityId: z
-        .array(z.number().int())
+        .preprocess(
+          (v) => typeof v === "string" ? v.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0) : v,
+          z.array(z.number().int())
+        )
         .optional()
-        .describe("Filter by priority: 2=High, 3=Normal, 4=Low"),
+        .describe("Filter by priority: 2=High, 3=Normal, 4=Low. Accept [2,3] or \"2,3\""),
       assigneeId: z
-        .array(z.number().int().positive())
+        .preprocess(
+          (v) => typeof v === "string" ? v.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0) : v,
+          z.array(z.number().int().positive())
+        )
         .optional()
-        .describe("Filter by assignee user ID(s)"),
+        .describe("Filter by assignee user ID(s). Accept [123] or \"123\""),
       categoryId: z
-        .array(z.number().int().positive())
+        .preprocess(
+          (v) => typeof v === "string" ? v.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0) : v,
+          z.array(z.number().int().positive())
+        )
         .optional()
-        .describe("Filter by category ID(s)"),
+        .describe("Filter by category ID(s). Accept [10,11] or \"10,11\""),
       milestoneId: z
-        .array(z.number().int().positive())
+        .preprocess(
+          (v) => typeof v === "string" ? v.split(",").map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0) : v,
+          z.array(z.number().int().positive())
+        )
         .optional()
-        .describe("Filter by milestone ID(s)"),
+        .describe("Filter by milestone ID(s). Accept [20] or \"20\""),
       keyword: z
         .string()
         .optional()
@@ -102,6 +123,7 @@ PAGINATION: Use offset + count to paginate. Max 100 per request.`,
         .default("desc")
         .describe("Sort order: asc or desc (default desc)"),
     },
+
     async (input) => {
       return handleGetIssueList(input, config);
     }
@@ -246,6 +268,64 @@ Use the IDs to filter issues via backlog_get_issue_list (milestoneId param).`,
     },
     async (input) => {
       return handleGetMilestones(input, config);
+    }
+  );
+
+  // ── Tool: backlog_get_projects ───────────────────────────────────────────
+  server.tool(
+    "backlog_get_projects",
+    `Fetch the list of Backlog projects accessible to the authenticated user.
+
+Returns each project with its numeric ID, project key, name, and archived status.
+Use the numeric ID in the projectId[] filter of backlog_get_issue_list.
+
+Optional filter:
+- archived: omit = all projects, false = active only (default), true = archived only`,
+    {
+      archived: z
+        .boolean()
+        .optional()
+        .describe(
+          "Filter by archived status. Omit = all, false = active only, true = archived only"
+        ),
+    },
+    async (input) => {
+      return handleGetProjects(input, config);
+    }
+  );
+
+  // ── Tool: backlog_get_users ──────────────────────────────────────────────
+  server.tool(
+    "backlog_get_users",
+    `Fetch project members for a given Backlog project.
+
+Returns a table of users with their numeric ID, userId, display name, email, and role.
+Use the ID column as assigneeId in backlog_get_issue_list to filter by assignee.
+
+INPUT:
+- projectIdOrKey (required): project key e.g. "MYPROJ" or numeric ID e.g. "12345"
+- keyword (optional): filter by display name or userId, case-insensitive
+
+EXAMPLE: List all members of project "MYPROJ" → { projectIdOrKey: "MYPROJ" }
+EXAMPLE: Find user named "Nguyen"       → { projectIdOrKey: "MYPROJ", keyword: "nguyen" }`,
+    {
+      projectIdOrKey: z
+        .string()
+        .min(1)
+        .describe(
+          "Project key or numeric ID. Examples: \"MYPROJ\", \"12345\". " +
+          "Use backlog_get_projects to discover project keys."
+        ),
+      keyword: z
+        .string()
+        .optional()
+        .describe(
+          "Filter by display name or userId (case-insensitive). " +
+          "Example: \"nguyen\" or \"john.doe\""
+        ),
+    },
+    async (input) => {
+      return handleGetUsers(input, config);
     }
   );
 

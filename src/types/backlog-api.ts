@@ -6,8 +6,8 @@
 
 export interface BacklogRawUser {
   id: number;
-  userId: string;
-  name: string;
+  userId: string | null;  // null for guest/restricted account types
+  name: string | null;
   roleType: number;
   lang: string | null;
   mailAddress: string | null;
@@ -104,4 +104,18 @@ export interface BacklogRawComment {
   updated: string;
   stars: unknown[];
   notifications: unknown[];
+}
+
+export interface BacklogRawProject {
+  id: number;
+  projectKey: string;
+  name: string;
+  chartEnabled: boolean;
+  subtaskingEnabled: boolean;
+  useWiki: boolean;
+  useFileSharing: boolean;
+  useGit: boolean;
+  textFormattingRule: string;
+  archived: boolean;
+  displayOrder: number;
 }

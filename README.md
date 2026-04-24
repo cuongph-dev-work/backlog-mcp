@@ -16,6 +16,8 @@ An MCP (Model Context Protocol) server for Backlog (Nulab), providing AI agents 
 - 🔎 `backlog_get_issue_list` — list issues with rich filtering (project, status, priority, assignee, keyword, etc.)
 - 🔍 `backlog_get_issue` — fetch a single issue's full details
 - 💬 `backlog_get_comments` — fetch issue comments with changelog entries
+- 🗂️ `backlog_get_projects` — list all accessible projects (with IDs and keys for filtering)
+- 👥 `backlog_get_users` — list project members (get user IDs for assignee filtering)
 - 🏷️ `backlog_get_statuses` — list all statuses in a project (with IDs for filtering)
 - ⚡ `backlog_get_priorities` — list global issue priorities (with IDs for filtering)
 - 📂 `backlog_get_categories` — list all categories in a project (with IDs for filtering)
@@ -68,12 +70,12 @@ Fetch a list of Backlog issues with optional filters.
 **Input:**
 | Field | Type | Description |
 |---|---|---|
-| `projectId` | `number[]` | Filter by project ID(s) — highly recommended |
-| `statusId` | `number[]` | Filter by status: 1=Open, 2=InProgress, 3=Resolved, 4=Closed |
-| `priorityId` | `number[]` | Filter by priority: 2=High, 3=Normal, 4=Low |
-| `assigneeId` | `number[]` | Filter by assignee user ID(s) |
-| `categoryId` | `number[]` | Filter by category ID(s) |
-| `milestoneId` | `number[]` | Filter by milestone ID(s) |
+| `projectIdOrKey` | `string` | Filter by project key ("MYPROJ") or numeric ID ("12345") — comma-separated, auto-resolved |
+| `statusId` | `number[] or string` | Filter by status: 1=Open, 2=InProgress, 3=Resolved, 4=Closed. Accept `[1,2]` or `"1,2"` |
+| `priorityId` | `number[] or string` | Filter by priority: 2=High, 3=Normal, 4=Low. Accept `[2,3]` or `"2,3"` |
+| `assigneeId` | `number[] or string` | Filter by assignee user ID(s). Get IDs from `backlog_get_users` |
+| `categoryId` | `number[] or string` | Filter by category ID(s) |
+| `milestoneId` | `number[] or string` | Filter by milestone ID(s) |
 | `keyword` | `string` | Search keyword in summary and description |
 | `parentChild` | `0\|1\|2\|3\|4` | 0=all, 1=child only, 2=parent only, 3=no parent, 4=no child |
 | `count` | `number` | Number of issues (1–100, default 20) |
@@ -112,6 +114,33 @@ Fetch comments for a Backlog issue.
 | `maxId` | `number` | Return comments with ID <= maxId |
 
 **Output:** List of comments with author, date, text content, and field changes (changelog).
+
+---
+
+### `backlog_get_projects`
+
+Fetch the list of Backlog projects accessible to the current API Key.
+
+**Input:**
+| Field | Type | Description |
+|---|---|---|
+| `archived` | `boolean` | Omit = all, `false` = active only, `true` = archived only |
+
+**Output:** Table of projects with ID, key, name, and archived flag. Use the key in project-scoped tools or `projectIdOrKey` in `backlog_get_issue_list`.
+
+---
+
+### `backlog_get_users`
+
+Fetch project members for a given Backlog project.
+
+**Input:**
+| Field | Type | Description |
+|---|---|---|
+| `projectIdOrKey` | `string` | **Required.** Project key (e.g. `MYPROJ`) or numeric ID |
+| `keyword` | `string` | Filter by display name or userId (case-insensitive) |
+
+**Output:** Table of project members with numeric ID, userId, name, email, and role. Use the **ID** as `assigneeId` in `backlog_get_issue_list`.
 
 ---
 

@@ -76,3 +76,30 @@ export function projectCategoriesUrl(baseUrl: string, projectIdOrKey: string): s
 export function projectVersionsUrl(baseUrl: string, projectIdOrKey: string): string {
   return `${baseUrl}${API_BASE}/projects/${encodeURIComponent(projectIdOrKey)}/versions`;
 }
+
+/**
+ * URL for the list of all projects.
+ * @example projectsUrl("https://space.backlog.com")
+ *   → "https://space.backlog.com/api/v2/projects"
+ */
+export function projectsUrl(baseUrl: string): string {
+  return `${baseUrl}${API_BASE}/projects`;
+}
+
+/**
+ * URL for a single project (used to resolve a project key to its numeric ID).
+ * @example singleProjectUrl("https://space.backlog.com", "MYPROJ")
+ *   → "https://space.backlog.com/api/v2/projects/MYPROJ"
+ */
+export function singleProjectUrl(baseUrl: string, projectIdOrKey: string): string {
+  return `${baseUrl}${API_BASE}/projects/${encodeURIComponent(projectIdOrKey)}`;
+}
+
+/**
+ * URL for project member list.
+ * @example projectUsersUrl("https://space.backlog.com", "MYPROJ")
+ *   → "https://space.backlog.com/api/v2/projects/MYPROJ/users"
+ */
+export function projectUsersUrl(baseUrl: string, projectIdOrKey: string): string {
+  return `${baseUrl}${API_BASE}/projects/${encodeURIComponent(projectIdOrKey)}/users`;
+}

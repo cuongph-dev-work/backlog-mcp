@@ -34,6 +34,31 @@ export interface BacklogMilestone {
   displayOrder: number;
 }
 
+export interface BacklogProject {
+  id: number;
+  projectKey: string;
+  name: string;
+  archived: boolean;
+  chartEnabled: boolean;
+  subtaskingEnabled: boolean;
+  useWiki: boolean;
+  useFileSharing: boolean;
+  useGit: boolean;
+  textFormattingRule: string;
+}
+
+export interface BacklogUser {
+  id: number;
+  userId: string | null;
+  name: string | null;
+  roleType: number;
+  /** Human-readable role name derived from roleType */
+  roleName: string;
+  mailAddress: string | null;
+  lastLoginTime: string | null;
+}
+
+
 /**
  * Compact issue summary — returned inside backlog_get_issue_list.
  */

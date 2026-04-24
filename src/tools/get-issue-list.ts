@@ -6,34 +6,59 @@ import type { Config } from "../config.js";
 import type { BacklogIssueSummary } from "../types.js";
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Accepts either:
+ *  - a JSON array of numbers:  [12345, 67890]
+ *  - a comma-separated string: "12345, 67890"  or  "12345"
+ * Produces: number[]
+ */
+function coerceIds(describe: string) {
+  return z
+    .preprocess((val) => {
+      if (typeof val === "string") {
+        return val
+          .split(",")
+          .map((s) => Number(s.trim()))
+          .filter((n) => !isNaN(n) && n > 0);
+      }
+      return val;
+    }, z.array(z.number().int().positive()))
+    .optional()
+    .describe(describe);
+}
+
+// ---------------------------------------------------------------------------
 // Input schema
 // ---------------------------------------------------------------------------
 
 export const getIssueListSchema = z.object({
-  projectId: z
-    .array(z.number().int().positive())
+  projectIdOrKey: z
+    .string()
     .optional()
-    .describe("Filter by project ID(s). Highly recommended — omitting fetches all visible issues."),
-  statusId: z
-    .array(z.number().int().min(1).max(4))
-    .optional()
-    .describe("Filter by status ID: 1=Open, 2=InProgress, 3=Resolved, 4=Closed"),
-  priorityId: z
-    .array(z.number().int())
-    .optional()
-    .describe("Filter by priority ID: 2=High, 3=Normal, 4=Low"),
-  assigneeId: z
-    .array(z.number().int().positive())
-    .optional()
-    .describe("Filter by assignee user ID(s)"),
-  categoryId: z
-    .array(z.number().int().positive())
-    .optional()
-    .describe("Filter by category ID(s)"),
-  milestoneId: z
-    .array(z.number().int().positive())
-    .optional()
-    .describe("Filter by milestone ID(s)"),
+    .describe(
+      "Filter by project key(s) or numeric ID(s). Accepts a single value or comma-separated list. " +
+      "Examples: \"MYPROJ\", \"12345\", \"MYPROJ,OTHER\", \"12345,67890\". " +
+      "Project keys are automatically resolved to numeric IDs. " +
+      "Highly recommended — omitting fetches all visible issues."
+    ),
+  statusId: coerceIds(
+    "Filter by status ID(s). Accept [1,2] or \"1,2\". Values: 1=Open, 2=InProgress, 3=Resolved, 4=Closed"
+  ),
+  priorityId: coerceIds(
+    "Filter by priority ID(s). Accept [2,3] or \"2,3\". Values: 2=High, 3=Normal, 4=Low"
+  ),
+  assigneeId: coerceIds(
+    "Filter by assignee user ID(s). Accept [123] or \"123\"."
+  ),
+  categoryId: coerceIds(
+    "Filter by category ID(s). Accept [10,11] or \"10,11\". Use backlog_get_categories to look up IDs."
+  ),
+  milestoneId: coerceIds(
+    "Filter by milestone ID(s). Accept [20] or \"20\". Use backlog_get_milestones to look up IDs."
+  ),
   keyword: z
     .string()
     .optional()
@@ -97,6 +122,41 @@ export const getIssueListSchema = z.object({
 export type GetIssueListInput = z.infer<typeof getIssueListSchema>;
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Parses a CSV string of project keys / numeric IDs and returns an array of
+ * numeric project IDs ready for use in the Backlog issues API.
+ * Non-numeric entries (e.g. "MYPROJ") are resolved via GET /projects/:key.
+ */
+async function resolveProjectIds(
+  input: string | undefined,
+  client: BacklogHttpClient
+): Promise<number[] | undefined> {
+  if (!input) return undefined;
+
+  const parts = input
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const ids: number[] = [];
+  for (const part of parts) {
+    const n = Number(part);
+    if (!isNaN(n) && n > 0) {
+      ids.push(n);
+    } else {
+      // Project key — resolve to numeric ID
+      const project = await client.getProject(part);
+      ids.push(project.id);
+    }
+  }
+
+  return ids.length > 0 ? ids : undefined;
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
@@ -110,12 +170,15 @@ export async function handleGetIssueList(
     return errorContent(`Invalid input: ${msg}`);
   }
 
-  const { projectId, statusId, priorityId, assigneeId, categoryId, milestoneId,
+  const { projectIdOrKey, statusId, priorityId, assigneeId, categoryId, milestoneId,
     keyword, parentChild, count, offset, sort, order } = parsed.data;
 
   const client = new BacklogHttpClient(cfg.BACKLOG_BASE_URL, cfg.BACKLOG_API_KEY);
 
   try {
+    // Resolve projectIdOrKey (keys/IDs) → numeric IDs required by the API
+    const projectId = await resolveProjectIds(projectIdOrKey, client);
+
     const issues = await client.getIssueList({
       projectId,
       statusId,
