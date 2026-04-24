@@ -7,6 +7,7 @@ import type {
   BacklogRawMilestone,
   BacklogRawProject,
   BacklogRawUser,
+  BacklogRawAttachment,
 } from "../types/backlog-api.js";
 import type {
   BacklogIssue,
@@ -19,6 +20,7 @@ import type {
   BacklogMilestone,
   BacklogProject,
   BacklogUser,
+  BacklogAttachment,
 } from "../types.js";
 import { issueViewUrl } from "./endpoints.js";
 
@@ -169,11 +171,35 @@ function roleTypeName(roleType: number): string {
 export function mapUser(raw: BacklogRawUser): BacklogUser {
   return {
     id: raw.id,
-    userId: raw.userId,
-    name: raw.name,
+    userId: raw.userId ?? null,
+    name: raw.name ?? null,
     roleType: raw.roleType,
     roleName: roleTypeName(raw.roleType),
     mailAddress: raw.mailAddress ?? null,
     lastLoginTime: raw.lastLoginTime ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Attachment mappers
+// ---------------------------------------------------------------------------
+
+/** Formats a file size in bytes to a human-readable string. */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+/** Maps a raw Backlog attachment payload to the BacklogAttachment domain type. */
+export function mapAttachment(raw: BacklogRawAttachment): BacklogAttachment {
+  return {
+    id: raw.id,
+    name: raw.name,
+    size: raw.size,
+    sizeFormatted: formatFileSize(raw.size),
+    uploadedBy: raw.createdUser?.name ?? null,
+    created: raw.created,
   };
 }

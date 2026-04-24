@@ -61,6 +61,8 @@ export interface BacklogRawAttachment {
   id: number;
   name: string;
   size: number;
+  createdUser: BacklogRawUser;
+  created: string;
 }
 
 export interface BacklogRawIssue {

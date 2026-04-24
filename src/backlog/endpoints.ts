@@ -103,3 +103,25 @@ export function singleProjectUrl(baseUrl: string, projectIdOrKey: string): strin
 export function projectUsersUrl(baseUrl: string, projectIdOrKey: string): string {
   return `${baseUrl}${API_BASE}/projects/${encodeURIComponent(projectIdOrKey)}/users`;
 }
+
+/**
+ * URL to list attachments on an issue.
+ * @example issueAttachmentsUrl("https://space.backlog.com", "BLG-123")
+ *   → "https://space.backlog.com/api/v2/issues/BLG-123/attachments"
+ */
+export function issueAttachmentsUrl(baseUrl: string, issueIdOrKey: string): string {
+  return `${baseUrl}${API_BASE}/issues/${encodeURIComponent(issueIdOrKey)}/attachments`;
+}
+
+/**
+ * URL to download a specific attachment from an issue.
+ * @example issueAttachmentDownloadUrl("https://space.backlog.com", "BLG-123", 42)
+ *   → "https://space.backlog.com/api/v2/issues/BLG-123/attachments/42"
+ */
+export function issueAttachmentDownloadUrl(
+  baseUrl: string,
+  issueIdOrKey: string,
+  attachmentId: number
+): string {
+  return `${baseUrl}${API_BASE}/issues/${encodeURIComponent(issueIdOrKey)}/attachments/${attachmentId}`;
+}

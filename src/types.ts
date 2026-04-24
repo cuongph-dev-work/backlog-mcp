@@ -58,6 +58,18 @@ export interface BacklogUser {
   lastLoginTime: string | null;
 }
 
+export interface BacklogAttachment {
+  id: number;
+  name: string;
+  /** File size in bytes */
+  size: number;
+  /** Human-readable file size, e.g. "191 KB", "2.3 MB" */
+  sizeFormatted: string;
+  /** Display name of the user who uploaded the file */
+  uploadedBy: string | null;
+  created: string;
+}
+
 
 /**
  * Compact issue summary — returned inside backlog_get_issue_list.

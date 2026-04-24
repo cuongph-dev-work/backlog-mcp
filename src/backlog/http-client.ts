@@ -10,6 +10,8 @@ import {
   projectsUrl,
   singleProjectUrl,
   projectUsersUrl,
+  issueAttachmentsUrl,
+  issueAttachmentDownloadUrl,
 } from "./endpoints.js";
 import {
   mapIssue,
@@ -21,6 +23,7 @@ import {
   mapMilestone,
   mapProject,
   mapUser,
+  mapAttachment,
 } from "./mappers.js";
 import { backlogHttpError, backlogResponseError } from "../errors.js";
 import type {
@@ -32,6 +35,7 @@ import type {
   BacklogRawMilestone,
   BacklogRawProject,
   BacklogRawUser,
+  BacklogRawAttachment,
 } from "../types/backlog-api.js";
 import type {
   BacklogIssue,
@@ -43,6 +47,7 @@ import type {
   BacklogMilestone,
   BacklogProject,
   BacklogUser,
+  BacklogAttachment,
 } from "../types.js";
 
 // ---------------------------------------------------------------------------
@@ -275,6 +280,47 @@ export class BacklogHttpClient {
       throw backlogResponseError("Expected array response from GET /projects/:key/users", res.data);
     }
     return (res.data as BacklogRawUser[]).map(mapUser);
+  }
+
+  // ---------------------------------------------------------------------------
+  // backlog_get_attachments / backlog_download_attachment
+  // ---------------------------------------------------------------------------
+
+  /** Fetch attachment list for an issue. */
+  async getIssueAttachments(issueIdOrKey: string): Promise<BacklogAttachment[]> {
+    const url = issueAttachmentsUrl(this.baseUrl, issueIdOrKey);
+    const res = await this.http.get(url);
+    this.assertOk(res.status, url, res.data);
+    if (!Array.isArray(res.data)) {
+      throw backlogResponseError("Expected array response from GET /issues/:key/attachments", res.data);
+    }
+    return (res.data as BacklogRawAttachment[]).map(mapAttachment);
+  }
+
+  /**
+   * Download a single attachment as a Buffer.
+   * Returns { data, filename } where filename is parsed from Content-Disposition or fallback.
+   */
+  async downloadAttachment(
+    issueIdOrKey: string,
+    attachmentId: number
+  ): Promise<{ data: Buffer; filename: string }> {
+    const url = issueAttachmentDownloadUrl(this.baseUrl, issueIdOrKey, attachmentId);
+    const res = await this.http.get(url, { responseType: "arraybuffer" });
+    this.assertOk(res.status, url, "[binary response]");
+
+    // Parse filename from Content-Disposition header
+    const disposition = res.headers["content-disposition"] as string | undefined;
+    let filename = `attachment_${attachmentId}`;
+    if (disposition) {
+      // Handles: attachment; filename="foo.png" or filename*=UTF-8''foo.png
+      const match =
+        disposition.match(/filename\*=UTF-8''([^;]+)/i) ??
+        disposition.match(/filename="?([^";]+)"?/i);
+      if (match?.[1]) filename = decodeURIComponent(match[1].trim());
+    }
+
+    return { data: Buffer.from(res.data as ArrayBuffer), filename };
   }
 
   // ---------------------------------------------------------------------------

@@ -13,6 +13,8 @@ import { handleGetCategories } from "./tools/get-categories.js";
 import { handleGetMilestones } from "./tools/get-milestones.js";
 import { handleGetProjects } from "./tools/get-projects.js";
 import { handleGetUsers } from "./tools/get-users.js";
+import { handleGetAttachments } from "./tools/get-attachments.js";
+import { handleDownloadAttachment } from "./tools/download-attachment.js";
 
 // ---------------------------------------------------------------------------
 // MCP server factory
@@ -326,6 +328,69 @@ EXAMPLE: Find user named "Nguyen"       → { projectIdOrKey: "MYPROJ", keyword:
     },
     async (input) => {
       return handleGetUsers(input, config);
+    }
+  );
+
+  // ── Tool: backlog_get_attachments ────────────────────────────────────────
+  server.tool(
+    "backlog_get_attachments",
+    `List all attachments on a Backlog issue.
+
+Returns a table with attachment ID, filename, size, uploader, and upload date.
+Use the attachment ID with backlog_download_attachment to download a specific file.
+
+INPUT:
+- issueIdOrKey (required): issue key e.g. "BLG-123" or numeric ID e.g. "12345"
+
+EXAMPLE: { issueIdOrKey: "BLG-123" }`,
+    {
+      issueIdOrKey: z
+        .string()
+        .min(1)
+        .describe(
+          "Issue key or numeric ID. Examples: \"BLG-123\", \"12345\". " +
+          "Use the attachment ID from this result with backlog_download_attachment."
+        ),
+    },
+    async (input) => {
+      return handleGetAttachments(input, config);
+    }
+  );
+
+  // ── Tool: backlog_download_attachment ─────────────────────────────────────
+  server.tool(
+    "backlog_download_attachment",
+    `Download an attachment from a Backlog issue and save it to the local filesystem.
+
+Returns the absolute path where the file was saved, the filename, and the file size.
+Get the attachmentId from backlog_get_attachments first.
+
+INPUT:
+- issueIdOrKey (required): issue key e.g. "BLG-123" or numeric ID
+- attachmentId (required): numeric ID from backlog_get_attachments
+- outputDir (optional): directory to save file (created if missing, default: "./downloads")
+
+EXAMPLE: { issueIdOrKey: "BLG-123", attachmentId: 42, outputDir: "./downloads" }`,
+    {
+      issueIdOrKey: z
+        .string()
+        .min(1)
+        .describe("Issue key or numeric ID. Examples: \"BLG-123\", \"12345\"."),
+      attachmentId: z
+        .number()
+        .int()
+        .positive()
+        .describe("Numeric attachment ID from backlog_get_attachments. Example: 42"),
+      outputDir: z
+        .string()
+        .optional()
+        .describe(
+          "Directory to save the file. Created automatically if missing. " +
+          "Default: \"./downloads\". Example: \"/tmp/backlog-files\""
+        ),
+    },
+    async (input) => {
+      return handleDownloadAttachment(input, config);
     }
   );
 
