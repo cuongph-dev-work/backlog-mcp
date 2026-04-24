@@ -46,3 +46,53 @@ export function truncate(text: string, maxLen: number): string {
 export function todayLocalDate(): string {
   return dayjs().format("YYYY-MM-DD");
 }
+
+// ---------------------------------------------------------------------------
+// Export / filesystem helpers
+// ---------------------------------------------------------------------------
+
+const TEXT_READABLE_EXTENSIONS = new Set([
+  ".txt",
+  ".md",
+  ".markdown",
+  ".json",
+  ".csv",
+  ".tsv",
+  ".log",
+  ".xml",
+  ".yaml",
+  ".yml",
+]);
+
+/**
+ * Strips characters that are unsafe in filesystem path segments.
+ * Replaces `<>:"/\|?*` and control characters with `_`.
+ */
+export function sanitizePathSegment(value: string): string {
+  const sanitized = value.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_").trim();
+  return sanitized.length > 0 ? sanitized : "unnamed";
+}
+
+/**
+ * Returns true if the filename has a text-readable extension (safe to embed as UTF-8).
+ */
+export function isTextReadableFile(filename: string): boolean {
+  const lower = filename.toLowerCase();
+  const dot = lower.lastIndexOf(".");
+  if (dot < 0) return false;
+  return TEXT_READABLE_EXTENSIONS.has(lower.slice(dot));
+}
+
+/**
+ * Returns true if the filename is a common image format that can be embedded in Markdown.
+ */
+export function isMarkdownImageFile(filename: string): boolean {
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename);
+}
+
+/**
+ * Lowercases and collapses whitespace for fuzzy text matching.
+ */
+export function normalizeWhitespaceForMatch(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}

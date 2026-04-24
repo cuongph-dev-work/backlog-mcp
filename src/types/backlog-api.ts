@@ -100,7 +100,7 @@ export interface BacklogRawComment {
     field: string;
     newValue: string | null;
     originalValue: string | null;
-  }>;
+  }> | null;
   createdUser: BacklogRawUser;
   created: string;
   updated: string;

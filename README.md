@@ -20,6 +20,7 @@ An MCP (Model Context Protocol) server for Backlog (Nulab), providing AI agents 
 - 👥 `backlog_get_users` — list project members (get user IDs for assignee filtering)
 - 📎 `backlog_get_attachments` — list attachments on an issue (with IDs for downloading)
 - ⬇️ `backlog_download_attachment` — download an attachment to the local filesystem
+- 📦 `backlog_export_issue_context` — export issue, comments, and attachments into a local raw Markdown context bundle for LLM summarization
 - 🏷️ `backlog_get_statuses` — list all statuses in a project (with IDs for filtering)
 - ⚡ `backlog_get_priorities` — list global issue priorities (with IDs for filtering)
 - 📂 `backlog_get_categories` — list all categories in a project (with IDs for filtering)

@@ -15,6 +15,7 @@ import { handleGetProjects } from "./tools/get-projects.js";
 import { handleGetUsers } from "./tools/get-users.js";
 import { handleGetAttachments } from "./tools/get-attachments.js";
 import { handleDownloadAttachment } from "./tools/download-attachment.js";
+import { handleExportIssueContext } from "./tools/export-issue-context.js";
 
 // ---------------------------------------------------------------------------
 // MCP server factory
@@ -384,6 +385,70 @@ EXAMPLE: { issueIdOrKey: "BLG-123", attachmentId: 42 }`,
     },
     async (input) => {
       return handleDownloadAttachment(input, config);
+    }
+  );
+
+  // ── Tool: backlog_export_issue_context ────────────────────────────────────
+  server.tool(
+    "backlog_export_issue_context",
+    `Export a Backlog issue into a local raw context bundle for LLM summarization.
+
+Fetches issue details, all comments (paginated), attachment metadata, downloads files, and writes:
+- raw.md: full markdown context ordered for reading (description → issue attachments → comments → extracted text)
+- manifest.json: machine-readable export metadata with placement confidence per attachment
+
+Attachment placement is exact only when issue/comment text references the attachment; otherwise inferred by uploader/time or left unmatched.
+The output directory is configured via ATTACHMENT_WORKSPACE in the server's .env file.
+
+INPUT:
+- issueIdOrKey (required): issue key e.g. "BLG-10474" or numeric ID
+- outputDir (optional): override export root directory
+- includeComments/includeAttachments/downloadAttachments/extractReadableFiles (optional booleans, default: true)
+- maxAttachmentBytes (optional): skip files larger than this (default: 10485760 = 10 MB)
+- placementWindowMinutes (optional): time window for inferred comment placement (default: 10)
+
+EXAMPLE: { issueIdOrKey: "BLG-10474" }`,
+    {
+      issueIdOrKey: z
+        .string()
+        .min(1)
+        .describe("Backlog issue key or numeric issue ID. Example: BLG-10474"),
+      outputDir: z
+        .string()
+        .optional()
+        .describe("Root directory for export output. Default: ATTACHMENT_WORKSPACE config value."),
+      includeComments: z
+        .boolean()
+        .optional()
+        .describe("Include all issue comments. Default: true."),
+      includeAttachments: z
+        .boolean()
+        .optional()
+        .describe("Include issue attachment metadata. Default: true."),
+      downloadAttachments: z
+        .boolean()
+        .optional()
+        .describe("Download attachment files. Default: true."),
+      extractReadableFiles: z
+        .boolean()
+        .optional()
+        .describe("Extract text-like attachment contents into markdown. Default: true."),
+      maxAttachmentBytes: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Skip downloading attachments larger than this many bytes. Default: 10485760."),
+      placementWindowMinutes: z
+        .number()
+        .int()
+        .min(0)
+        .max(1440)
+        .optional()
+        .describe("Time window (minutes) for inferred comment attachment placement. Default: 10."),
+    },
+    async (input) => {
+      return handleExportIssueContext(input, config);
     }
   );
 

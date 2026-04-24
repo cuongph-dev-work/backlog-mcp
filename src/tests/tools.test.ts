@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { getIssueListSchema } from "../tools/get-issue-list.js";
 import { getIssueSchema } from "../tools/get-issue.js";
 import { getCommentsSchema } from "../tools/get-comments.js";
+import { exportIssueContextSchema } from "../tools/export-issue-context.js";
 
 // ---------------------------------------------------------------------------
 // Schema: backlog_get_issue_list
@@ -179,5 +180,36 @@ describe("handleGetIssue — invalid input", () => {
     if (result.content[0].type === "text") {
       expect(result.content[0].text).toContain("Invalid input");
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Schema: backlog_export_issue_context
+// ---------------------------------------------------------------------------
+
+describe("Schema: backlog_export_issue_context", () => {
+  it("accepts minimal input and applies defaults", () => {
+    const result = exportIssueContextSchema.safeParse({ issueIdOrKey: "BLG-10474" });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.includeComments).toBe(true);
+      expect(result.data.includeAttachments).toBe(true);
+      expect(result.data.downloadAttachments).toBe(true);
+      expect(result.data.extractReadableFiles).toBe(true);
+    }
+  });
+
+  it("rejects empty issueIdOrKey", () => {
+    expect(exportIssueContextSchema.safeParse({ issueIdOrKey: "" }).success).toBe(false);
+  });
+
+  it("rejects invalid maxAttachmentBytes", () => {
+    expect(
+      exportIssueContextSchema.safeParse({
+        issueIdOrKey: "BLG-10474",
+        maxAttachmentBytes: 0,
+      }).success
+    ).toBe(false);
   });
 });
