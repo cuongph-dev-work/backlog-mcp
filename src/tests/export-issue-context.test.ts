@@ -150,7 +150,7 @@ describe("handleExportIssueContext", () => {
     );
     expect(fsMock.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("manifest.json"),
-      expect.stringContaining("\"issueKey\": \"BLG-10474\""),
+      expect.stringContaining('"issueKey": "BLG-10474"'),
       "utf8"
     );
   });

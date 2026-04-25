@@ -47,8 +47,8 @@ export const exportIssueContextSchema = z.object({
   extractReadableFiles: z
     .boolean()
     .optional()
-    .default(true)
-    .describe("Extract text-like attachment contents into markdown. Default: true."),
+    .default(false)
+    .describe("Extract text-like attachment contents into markdown. Default: false."),
   maxAttachmentBytes: z
     .number()
     .int()

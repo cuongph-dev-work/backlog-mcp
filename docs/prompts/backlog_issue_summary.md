@@ -14,6 +14,8 @@ Inputs:
 
 Read `raw.md` and `manifest.json` first. Treat `raw.md` as the source of truth for issue description, comments, changelog, attachment list, and extracted attachment text. Treat `manifest.json` as the source of truth for attachment placement confidence.
 
+Always write the final summary in Vietnamese, even when the Backlog issue, comments, attachments, logs, or source-code evidence mix Japanese, English, Vietnamese, or other languages. Keep technical identifiers, filenames, API names, error messages, code symbols, and quoted source text in their original language when translating would reduce precision.
+
 If image attachments are present and the current environment supports image reading or OCR, inspect the image files referenced in the manifest. If image reading is not available, explicitly list those images as uninspected.
 
 Use source-code tools only when the issue content suggests implementation impact or the user asks for code-aware analysis:
@@ -21,6 +23,8 @@ Use source-code tools only when the issue content suggests implementation impact
 - Use GitNexus for execution-flow, symbol, or impact analysis.
 - Use Serena for precise symbol/file lookup.
 - Do not guess file paths when code search tools return no evidence.
+
+If comments conflict, prefer newer comments as the likely current state, but explicitly mention the conflict and the related comment IDs.
 
 Return the summary in this format:
 
@@ -30,7 +34,7 @@ Return the summary in this format:
 ## Mục Tiêu
 One short paragraph describing the real goal of the task.
 
-## Bối Cảnh
+## Bối Cảnh Quan Trọng
 - Key facts from the issue description.
 - Key facts from comments.
 - Key facts from attachments.
@@ -39,6 +43,13 @@ One short paragraph describing the real goal of the task.
 1. Concrete implementation requirement.
 2. Concrete implementation requirement.
 3. Concrete implementation requirement.
+
+## Phạm Vi
+### Trong Scope
+- Work that is clearly required.
+
+### Cần Xác Nhận / Có Thể Ngoài Scope
+- Work that is mentioned but not clearly required.
 
 ## Acceptance Criteria Suy Luận
 - Verifiable expected behavior.
@@ -49,9 +60,29 @@ One short paragraph describing the real goal of the task.
 - Attachment `<name>`: what useful information it contains.
 - For inferred/unmatched attachment placement, mention the confidence.
 
-## Source Code Có Thể Liên Quan
-- `path/or/symbol`: reason this is likely relevant.
+## Decision Log
+- Comment #<id>: decision or change in direction.
+- Changelog: important status/priority/assignee/scope changes.
+
+## Gợi Ý Triển Khai
+- Phân tích sâu:
+  - Đoạn/module/file/API/symbol có khả năng cần sửa: `path/or/symbol`.
+  - Lý do liên quan đến yêu cầu Backlog.
+  - Hướng sửa đề xuất ở mức logic, không bịa code nếu chưa đọc source.
+- Logic có thể bị ảnh hưởng:
+  - Luồng xử lý/node logic bị ảnh hưởng.
+  - File/path/module liên quan.
+  - Tác động upstream/downstream nếu đã kiểm tra bằng GitNexus/Serena.
+- Testcase gợi ý:
+  - Test case cho luồng chính.
+  - Test case cho edge cases.
+  - Test case cho các luồng/module bị ảnh hưởng, không chỉ luồng sửa trực tiếp.
 - If no code was inspected, write: "Chưa đọc source code; chưa có đủ tín hiệu từ task hoặc user chưa yêu cầu."
+
+## Mức Độ Chắc Chắn
+- Đã xác nhận:
+- Suy luận:
+- Chưa đủ dữ liệu:
 
 ## Rủi Ro / Điểm Cần Xác Nhận
 - Open question.
@@ -60,7 +91,9 @@ One short paragraph describing the real goal of the task.
 
 Rules:
 
+- Write the final summary in Vietnamese.
 - Do not invent requirements that are not supported by the issue, comments, attachments, or inspected source code.
 - Distinguish confirmed facts from inference.
+- If comments conflict, prefer newer comments but mention the conflict and comment IDs.
 - Mention skipped, unreadable, or uninspected attachments.
 - Keep the final answer actionable for an engineer who will implement the task.

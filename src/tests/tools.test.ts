@@ -196,7 +196,7 @@ describe("Schema: backlog_export_issue_context", () => {
       expect(result.data.includeComments).toBe(true);
       expect(result.data.includeAttachments).toBe(true);
       expect(result.data.downloadAttachments).toBe(true);
-      expect(result.data.extractReadableFiles).toBe(true);
+      expect(result.data.extractReadableFiles).toBe(false);
     }
   });
 
