@@ -1,29 +1,48 @@
 {
   "name": "backlog-mcp",
-  "version": "0.1.0",
-  "description": "MCP server for Backlog (Nulab) — read issues, comments via API Key",
-  "private": true,
+  "version": "0.2.0",
+  "description": "MCP server for Backlog (Nulab) — read issues, comments, attachments via API Key",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
+  "bin": {
+    "backlog-mcp": "./dist/server.js"
+  },
+  "files": [
+    "dist/backlog",
+    "dist/tools",
+    "dist/types",
+    "dist/config.js",
+    "dist/config.d.ts",
+    "dist/errors.js",
+    "dist/errors.d.ts",
+    "dist/server.js",
+    "dist/server.d.ts",
+    "dist/types.js",
+    "dist/types.d.ts",
+    "dist/utils.js",
+    "dist/utils.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc --noEmit false --outDir dist",
+    "prepare": "npm run build && chmod +x dist/server.js",
     "dev": "tsx src/server.ts",
     "start": "node dist/server.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",
     "axios": "^1.7.7",
     "dayjs": "^1.11.20",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
     "@types/node": "^22.7.5",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",

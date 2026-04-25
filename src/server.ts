@@ -1,7 +1,7 @@
+#!/usr/bin/env node
 import "dotenv/config";
-import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { config } from "./config.js";
 import { handleGetIssueList } from "./tools/get-issue-list.js";
@@ -19,13 +19,12 @@ import { handleExportIssueContext } from "./tools/export-issue-context.js";
 
 // ---------------------------------------------------------------------------
 // MCP server factory
-// A new McpServer is created per request (stateless Streamable HTTP pattern).
 // ---------------------------------------------------------------------------
 
 function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "backlog-mcp",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
   // ── Tool: backlog_get_issue_list ──────────────────────────────────────────
@@ -365,7 +364,7 @@ EXAMPLE: { issueIdOrKey: "BLG-123" }`,
 
 Returns the absolute path where the file was saved, the filename, and the file size.
 Get the attachmentId from backlog_get_attachments first.
-The output directory is configured via BACKLOG_DOWNLOAD_DIR in the server's .env file.
+The output directory is configured via ATTACHMENT_WORKSPACE in the server's environment.
 
 INPUT:
 - issueIdOrKey (required): issue key e.g. "BLG-123" or numeric ID
@@ -398,12 +397,13 @@ Fetches issue details, all comments (paginated), attachment metadata, downloads 
 - manifest.json: machine-readable export metadata with placement confidence per attachment
 
 Attachment placement is exact only when issue/comment text references the attachment; otherwise inferred by uploader/time or left unmatched.
-The output directory is configured via ATTACHMENT_WORKSPACE in the server's .env file.
+The output directory is configured via ATTACHMENT_WORKSPACE in the server's environment.
 
 INPUT:
 - issueIdOrKey (required): issue key e.g. "BLG-10474" or numeric ID
 - outputDir (optional): override export root directory
-- includeComments/includeAttachments/downloadAttachments/extractReadableFiles (optional booleans, default: true)
+- includeComments/includeAttachments/downloadAttachments (optional booleans, default: true)
+- extractReadableFiles (optional boolean, default: false)
 - maxAttachmentBytes (optional): skip files larger than this (default: 10485760 = 10 MB)
 - placementWindowMinutes (optional): time window for inferred comment placement (default: 10)
 
@@ -432,7 +432,7 @@ EXAMPLE: { issueIdOrKey: "BLG-10474" }`,
       extractReadableFiles: z
         .boolean()
         .optional()
-        .describe("Extract text-like attachment contents into markdown. Default: true."),
+        .describe("Extract text-like attachment contents into markdown. Default: false."),
       maxAttachmentBytes: z
         .number()
         .int()
@@ -456,64 +456,18 @@ EXAMPLE: { issueIdOrKey: "BLG-10474" }`,
 }
 
 // ---------------------------------------------------------------------------
-// Express + Streamable HTTP transport
+// Stdio transport — the MCP client spawns this process
 // ---------------------------------------------------------------------------
 
-const app = express();
-app.use(express.json());
-
-/**
- * MCP endpoint — stateless, per-request server+transport pair.
- */
-app.all("/mcp", async (req, res) => {
+async function main(): Promise<void> {
   const server = createMcpServer();
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined, // stateless — no session header
-  });
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  process.stderr.write("backlog-mcp started (stdio)\n");
+}
 
-  res.on("close", () => {
-    transport.close().catch(() => {});
-  });
-
-  try {
-    await server.connect(transport);
-    await transport.handleRequest(req, res, req.body);
-  } catch (err) {
-    console.error("[MCP] Request error:", err);
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Internal server error" });
-    }
-  }
-});
-
-// Health check
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    server: "backlog-mcp",
-    version: "0.1.0",
-    backlogUrl: config.BACKLOG_BASE_URL,
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Start
-// ---------------------------------------------------------------------------
-
-app.listen(config.MCP_PORT, () => {
-  console.log(`\n🚀 Backlog MCP server running`);
-  console.log(`   Port     : ${config.MCP_PORT}`);
-  console.log(`   Endpoint : http://localhost:${config.MCP_PORT}/mcp`);
-  console.log(`   Health   : http://localhost:${config.MCP_PORT}/health`);
-  console.log(`   Backlog  : ${config.BACKLOG_BASE_URL}\n`);
-});
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("\n⏹  Shutting down...");
-  process.exit(0);
-});
-process.on("SIGINT", () => {
-  console.log("\n⏹  Shutting down...");
-  process.exit(0);
+main().catch((err: unknown) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  process.stderr.write(`[backlog-mcp] Fatal error: ${msg}\n`);
+  process.exit(1);
 });

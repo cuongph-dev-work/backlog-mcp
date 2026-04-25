@@ -14,16 +14,6 @@ const schema = z.object({
     .string()
     .min(1, "BACKLOG_API_KEY must not be empty"),
 
-  MCP_PORT: z
-    .string()
-    .default("3100")
-    .transform((v) => parseInt(v, 10))
-    .pipe(z.number().int().min(1).max(65535)),
-
-  LOG_LEVEL: z
-    .enum(["debug", "info", "warn", "error"])
-    .default("info"),
-
   ATTACHMENT_WORKSPACE: z
     .string()
     .default("./downloads")
@@ -48,3 +38,4 @@ function loadConfig(): Config {
 }
 
 export const config: Config = loadConfig();
+

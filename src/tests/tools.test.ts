@@ -146,8 +146,6 @@ describe("handleGetIssue — HTTP error propagation", () => {
     const mockConfig = {
       BACKLOG_BASE_URL: "https://space.backlog.com",
       BACKLOG_API_KEY: "test-key",
-      MCP_PORT: 3100,
-      LOG_LEVEL: "info",
     };
 
     const result = await handleGetIssue({ issueIdOrKey: "BLG-999" }, mockConfig as never);
@@ -170,8 +168,6 @@ describe("handleGetIssue — invalid input", () => {
     const mockConfig = {
       BACKLOG_BASE_URL: "https://space.backlog.com",
       BACKLOG_API_KEY: "test-key",
-      MCP_PORT: 3100,
-      LOG_LEVEL: "info",
     };
 
     const result = await handleGetIssue({}, mockConfig as never);

@@ -55,8 +55,6 @@ import type { Config } from "../config.js";
 const MOCK_CFG: Config = {
   BACKLOG_BASE_URL: "https://test.backlog.com",
   BACKLOG_API_KEY: "test-key",
-  MCP_PORT: 3100,
-  LOG_LEVEL: "info",
   ATTACHMENT_WORKSPACE: "/tmp/backlog-exports",
 };
 
