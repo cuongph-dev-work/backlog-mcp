@@ -1,13 +1,13 @@
 {
-  "name": "backlog-mcp",
-  "version": "0.2.0",
+  "name": "@cuongph.dev.work/backlog-mcp",
+  "version": "0.1.0",
   "description": "MCP server for Backlog (Nulab) — read issues, comments, attachments via API Key",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "bin": {
-    "backlog-mcp": "./dist/server.js"
+    "backlog-mcp": "dist/server.js"
   },
   "files": [
     "dist/backlog",
@@ -33,7 +33,9 @@
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "snyk:test": "snyk test",
+    "snyk:monitor": "snyk monitor"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",
