@@ -1,8 +1,10 @@
+import { defaultDownloadsDir } from "./bootstrap.js";
 import { z } from "zod";
 import { configError } from "./errors.js";
 
 // ---------------------------------------------------------------------------
-// Schema
+// Schema — only user-facing variables are read from the environment.
+// Internal/infra settings are hardcoded below.
 // ---------------------------------------------------------------------------
 
 const schema = z.object({
@@ -13,14 +15,17 @@ const schema = z.object({
   BACKLOG_API_KEY: z
     .string()
     .min(1, "BACKLOG_API_KEY must not be empty"),
-
-  ATTACHMENT_WORKSPACE: z
-    .string()
-    .default("./downloads")
-    .describe("Directory where downloaded attachments are saved (created if missing)"),
 });
 
-export type Config = z.infer<typeof schema>;
+// ---------------------------------------------------------------------------
+// Hardcoded defaults — not configurable via .env
+// ---------------------------------------------------------------------------
+
+const DEFAULTS = {
+  ATTACHMENT_WORKSPACE: defaultDownloadsDir, // absolute path
+} as const;
+
+export type Config = z.infer<typeof schema> & typeof DEFAULTS;
 
 // ---------------------------------------------------------------------------
 // Parse once at startup — callers import `config` directly
@@ -34,8 +39,7 @@ function loadConfig(): Config {
       .join("\n");
     throw configError(`Invalid configuration:\n${messages}`, result.error);
   }
-  return result.data;
+  return { ...DEFAULTS, ...result.data };
 }
 
 export const config: Config = loadConfig();
-
