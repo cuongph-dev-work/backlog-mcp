@@ -15,7 +15,7 @@ Fetch a list of Backlog issues with optional filters. Returns a compact table an
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `projectId` | `number[]` | ❌ | — | Filter by project ID(s). **Highly recommended** — omitting fetches all visible issues across all projects |
+| `projectIdOrKey` | `string` | ❌ | — | Filter by project key(s) or numeric ID(s). Accepts a single value or comma-separated list (e.g. `"MYPROJ"`, `"12345"`, `"MYPROJ,OTHER"`). Project keys are automatically resolved to numeric IDs. **Highly recommended** — omitting fetches all visible issues. |
 | `statusId` | `number[]` | ❌ | — | Filter by status: `1`=Open, `2`=InProgress, `3`=Resolved, `4`=Closed |
 | `priorityId` | `number[]` | ❌ | — | Filter by priority: `2`=High, `3`=Normal, `4`=Low |
 | `assigneeId` | `number[]` | ❌ | — | Filter by assignee user ID(s) |
@@ -28,11 +28,12 @@ Fetch a list of Backlog issues with optional filters. Returns a compact table an
 | `sort` | `string` | ❌ | `created` | Sort field: `created`, `updated`, `status`, `priority`, `dueDate`, `assignee`, `startDate`, `estimatedHours`, `actualHours`, ... |
 | `order` | `asc\|desc` | ❌ | `desc` | Sort order |
 
+> **Note:** `statusId`, `priorityId`, `assigneeId`, `categoryId`, `milestoneId` accept either a JSON array (`[1, 2]`) or a comma-separated string (`"1,2"`).
+
 ### Validation Rules
 
 - `count` must be between 1 and 100
 - `offset` must be >= 0
-- `statusId` values must be 1–4
 - `parentChild` must be 0–4
 - `sort` must be one of the predefined enum values
 
@@ -63,12 +64,21 @@ For each issue:
 | `estimatedHours / actualHours` | Hours if set |
 | `created / updated` | Timestamps |
 
+### Navigation Hints
+
+The output ends with a `💡 **Next:**` block:
+
+- `` `backlog_get_issue(issueIdOrKey: "<firstKey>")` `` — view full details of the first issue (dynamic: uses actual first issue key)
+- `` `backlog_get_issue_list(offset: N)` `` — load next page (only shown when `issues.length === count`, meaning more results may exist)
+
 ## Pagination
 
 To page through results, use `offset` + `count`:
 - Page 1: `{ count: 20, offset: 0 }`
 - Page 2: `{ count: 20, offset: 20 }`
 - Page 3: `{ count: 20, offset: 40 }`
+
+The navigation hint auto-calculates the next offset when the page is full.
 
 ## Error Cases
 
@@ -88,7 +98,7 @@ All errors return `isError: true` in the MCP response.
 {
   "name": "backlog_get_issue_list",
   "arguments": {
-    "projectId": [12345],
+    "projectIdOrKey": "MYPROJ",
     "statusId": [1, 2],
     "count": 20
   }
@@ -101,7 +111,7 @@ All errors return `isError: true` in the MCP response.
 {
   "name": "backlog_get_issue_list",
   "arguments": {
-    "projectId": [12345],
+    "projectIdOrKey": "MYPROJ",
     "priorityId": [2],
     "milestoneId": [67],
     "sort": "dueDate",
@@ -116,7 +126,7 @@ All errors return `isError: true` in the MCP response.
 {
   "name": "backlog_get_issue_list",
   "arguments": {
-    "projectId": [12345],
+    "projectIdOrKey": "MYPROJ",
     "keyword": "login timeout",
     "count": 10
   }
@@ -146,4 +156,11 @@ All errors return `isError: true` in the MCP response.
 - **Dates:** 2024-01-15 → 2024-01-31
 - **Hours:** Estimated 8h / Actual 3h
 - **Created:** 15 Jan 2024, 10:00 | **Updated:** 20 Jan 2024, 15:30
+
+...
+
+---
+💡 **Next:**
+- `backlog_get_issue(issueIdOrKey: "BLG-42")` — view full details of the first issue
+- `backlog_get_issue_list(offset: 20)` — load the next page (20 more results possible)
 ```

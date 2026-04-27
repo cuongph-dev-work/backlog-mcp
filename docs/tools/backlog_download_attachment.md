@@ -1,14 +1,13 @@
 # backlog_download_attachment
 
+Download a file attached to a Backlog issue and save it to the local filesystem.
+
 ## When to Use
 
-Use this tool when you need to:
-- **Download a file attached** to a Backlog issue to your local machine
-- **Save attachments** for further processing (reading content, sharing, etc.)
+- Download a file attached to a Backlog issue to your local machine
+- Save attachments for further processing (reading content, sharing, etc.)
 
 > **Workflow:** Call `backlog_get_attachments` first to get the list of attachment IDs, then use this tool to download a specific one.
-
----
 
 ## Input
 
@@ -19,8 +18,6 @@ Use this tool when you need to:
 
 > **Output directory** is configured server-side via `ATTACHMENT_WORKSPACE` in `.env` (default: `./downloads`).
 > The directory is created automatically if it doesn't exist.
-
----
 
 ## Output
 
@@ -34,7 +31,12 @@ Use this tool when you need to:
 **Attachment ID:** 42
 ```
 
----
+### Navigation Hints
+
+The output ends with a `💡 **Next:**` block:
+
+- `` `backlog_get_attachments(issueIdOrKey: "<key>")` `` — view all attachments on this issue
+- `` `backlog_get_issue(issueIdOrKey: "<key>")` `` — go back to issue overview
 
 ## Error Cases
 
@@ -44,11 +46,9 @@ Use this tool when you need to:
 | `[BACKLOG_HTTP_ERROR] ...` | Issue or attachment not found (404), access denied (403), or network issue |
 | `EACCES` / `ENOENT` | Filesystem permission denied or invalid path |
 
----
-
 ## Examples
 
-### Download with default output directory
+### Download an attachment
 
 **Request:**
 ```json
@@ -59,7 +59,7 @@ Use this tool when you need to:
 ```
 
 **Output:**
-```
+```markdown
 # Download Complete
 
 **File:** design-mockup.png
@@ -67,33 +67,12 @@ Use this tool when you need to:
 **Saved to:** /Users/you/project/downloads/design-mockup.png
 **Issue:** BLG-123
 **Attachment ID:** 42
-```
 
 ---
-
-### Download to a custom directory
-
-**Request:**
-```json
-{
-  "issueIdOrKey": "BLG-123",
-  "attachmentId": 42,
-  "outputDir": "/tmp/backlog-files"
-}
+💡 **Next:**
+- `backlog_get_attachments(issueIdOrKey: "BLG-123")` — view all attachments on this issue
+- `backlog_get_issue(issueIdOrKey: "BLG-123")` — go back to issue overview
 ```
-
-**Output:**
-```
-# Download Complete
-
-**File:** design-mockup.png
-**Size:** 954.2 KB (977112 bytes)
-**Saved to:** /tmp/backlog-files/design-mockup.png
-**Issue:** BLG-123
-**Attachment ID:** 42
-```
-
----
 
 ## Typical Workflow
 

@@ -48,6 +48,17 @@ Returns a markdown-formatted text block listing comments in order.
 
 > **Note:** Backlog activity entries can be either text comments, field changes, or both. The `changeLog` table shows `field`, `From`, and `To` columns.
 
+### Navigation Hints
+
+The output ends with a `💡 **Next:**` block:
+
+- `` `backlog_get_issue(issueIdOrKey: "<key>")` `` — go back to issue overview (always shown)
+- Pagination hint (only shown when `comments.length === count`, meaning more comments exist):
+  - `order: "desc"`: `` `backlog_get_comments(..., maxId: <lastId - 1>)` `` — load older comments
+  - `order: "asc"`: `` `backlog_get_comments(..., minId: <lastId + 1>)` `` — load newer comments
+
+The `maxId`/`minId` values are **auto-calculated** from the last comment ID in the current response.
+
 ## Pagination
 
 Backlog paginates comments by ID, not offset. To page through comments:
@@ -59,6 +70,8 @@ Backlog paginates comments by ID, not offset. To page through comments:
 **Oldest-first (asc):**
 - First page: `{ order: "asc", count: 20 }`
 - Next page: `{ order: "asc", count: 20, minId: <highest comment ID from previous page + 1> }`
+
+> **Tip:** The navigation hint auto-generates the correct pagination call — just copy the suggested next call.
 
 ## Error Cases
 
@@ -128,7 +141,12 @@ Reproduced the issue on mobile Safari 17.1. The refresh token endpoint returns 4
 **Field changes:**
 
 | Field | From | To |
-|-------|------|----|
+|-------|------|---|
 | status | Open | InProgress |
 | assignee | — | Alice Smith |
+
+---
+💡 **Next:**
+- `backlog_get_issue(issueIdOrKey: "BLG-42")` — go back to issue overview
+- `backlog_get_comments(issueIdOrKey: "BLG-42", order: "desc", maxId: 6584)` — load older comments
 ```
