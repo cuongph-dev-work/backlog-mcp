@@ -4,12 +4,12 @@
   "description": "MCP server for Backlog (Nulab) — read issues, comments, attachments via API Key",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cuongph-dev-work/backlog-mcp.git"
+    "url": "git+https://github.com/cuongph-dev-work/backlog_mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/cuongph-dev-work/backlog-mcp/issues"
+    "url": "https://github.com/cuongph-dev-work/backlog_mcp/issues"
   },
-  "homepage": "https://github.com/cuongph-dev-work/backlog-mcp#readme",
+  "homepage": "https://github.com/cuongph-dev-work/backlog_mcp#readme",
   "license": "MIT",
   "type": "module",
   "engines": {
