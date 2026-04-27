@@ -73,6 +73,14 @@ Returns a markdown-formatted text block with the following sections:
 
 Full issue description text.
 
+### Navigation Hints
+
+The output ends with a `💡 **Next:**` block suggesting follow-up tools:
+
+- `` `backlog_get_comments(issueIdOrKey: "<key>")` `` — read discussion & change history
+- `` `backlog_get_attachments(issueIdOrKey: "<key>")` `` — list attached files
+- `` `backlog_export_issue_context(issueIdOrKey: "<key>")` `` — export full context bundle (comments + attachments)
+
 ## Error Cases
 
 | Error Code | Meaning | Action |
@@ -151,4 +159,10 @@ All errors return `isError: true` in the MCP response.
 
 Users cannot log in after session expires.
 The token refresh flow fails silently on mobile Safari.
+
+---
+💡 **Next:**
+- `backlog_get_comments(issueIdOrKey: "BLG-42")` — read discussion & change history
+- `backlog_get_attachments(issueIdOrKey: "BLG-42")` — list attached files
+- `backlog_export_issue_context(issueIdOrKey: "BLG-42")` — export full context bundle (comments + attachments)
 ```
